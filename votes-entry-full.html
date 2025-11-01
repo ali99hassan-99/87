@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدخال الأصوات - الموقع الانتخابي</title>
+    <style>
+        /* [تنسيقات CSS الأساسية لسطح المكتب] */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; display: flex; min-height: 100vh; }
+
+        /* القائمة الجانبية على سطح المكتب */
+        .sidebar { width: 250px; background-color: #ffffff; box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); padding: 20px 0; position: fixed; height: 100%; transition: width 0.3s, transform 0.3s; overflow-x: hidden; z-index: 20; }
+        .sidebar.collapsed { width: 70px; }
+        .logo-box { text-align: center; padding: 0 10px 20px; }
+        .logo-box img { width: 50px; height: 50px; object-fit: contain; }
+        .sidebar nav { padding: 0 10px; }
+        .sidebar nav a { display: flex; align-items: center; padding: 12px 10px; color: #333; text-decoration: none; border-radius: 4px; margin-bottom: 8px; transition: background-color 0.3s; font-size: 0.95rem; }
+        .sidebar nav a:hover, .sidebar nav a.active { background-color: #e6e6e6; }
+        .sidebar nav a .icon { margin-left: 10px; font-size: 1.1rem; color: #6c5ce7; }
+        .sidebar.collapsed nav a span:not(.icon) { display: none; }
+        .sidebar.collapsed nav a .icon { margin-left: 0; margin-right: 0; }
+        .sidebar h3 { text-align: center; font-size: 0.9rem; color: #666; margin: 5px 0; }
+
+        /* المحتوى الرئيسي على سطح المكتب */
+        .main-content { flex-grow: 1; margin-right: 250px; padding: 20px; transition: margin-right 0.3s; }
+        .main-content.expanded { margin-right: 70px; }
+        .header { display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 15px 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); margin-bottom: 25px; }
+        .menu-toggle-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6c5ce7; margin-left: 15px; }
+        .user-profile-menu { position: relative; cursor: pointer; }
+        .user-avatar { display: flex; align-items: center; gap: 10px; }
+        .user-avatar img {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%; border: 2px solid #6c5ce7; object-fit: cover;
+        }
+        .dropdown-menu {
+            position: absolute; top: 55px; left: 0;
+            background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 10px 0;
+            width: 250px;
+            z-index: 100; opacity: 0; visibility: hidden; transform: translateY(-10px);
+            transition: all 0.2s ease-in-out; text-align: right;
+        }
+        .dropdown-menu.active { opacity: 1; visibility: visible; transform: translateY(0); }
+        .user-details { display: flex; justify-content: space-between; align-items: center; padding: 5px 15px; }
+        .user-name-tag { background-color: #f0f0f0; color: #6c5ce7; padding: 5px 10px; border-radius: 4px; font-size: 0.9rem; font-weight: 500; }
+        .logout-btn { width: 100%; text-align: right; background: none; border: none; padding: 10px 15px; cursor: pointer; color: #cc0000; font-size: 1rem; display: flex; align-items: center; justify-content: flex-end; gap: 10px; transition: background-color 0.2s; }
+        .vote-entry-container { width: 100%; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); }
+        .section-title-box { text-align: left; color: #666; font-size: 1.1rem; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+        .info-row { display: flex; gap: 15px; margin-bottom: 20px; }
+        .form-field { flex-grow: 1; min-width: 0; text-align: right; }
+        .form-field label { display: block; font-size: 0.9rem; color: #666; margin-bottom: 5px; text-align: center; }
+        .form-field input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 1rem; text-align: center; }
+        .votes-grid { border: 1px solid #eee; border-radius: 6px; margin-top: 30px; }
+        .grid-header { display: flex; font-weight: bold; background-color: #f9f9f9; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .grid-header .col-votes { flex-grow: 3; text-align: center; }
+        .grid-header .col-seq { flex-grow: 1; min-width: 70px; text-align: center; }
+        .grid-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+        .grid-row .col-votes { flex-grow: 3; padding: 0 15px; }
+        .grid-row .col-seq { flex-grow: 1; min-width: 70px; text-align: center; padding: 0 10px; }
+        .col-seq div { padding: 10px; background-color: #f0f0f0; border-radius: 4px; }
+        .col-votes input { border: 1px solid #c9c3ec; background-color: #fff; text-align: right; }
+        .action-buttons { margin-top: 30px; display: flex; justify-content: right; gap: 15px; }
+        .action-buttons button { padding: 10px 25px; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 500; }
+        .action-buttons .save-btn { background-color: #6c5ce7; color: white; }
+        .action-buttons .reset-btn { background-color: #e0e0e0; color: #333; }
+
+        /* === التجاوب (Responsive) للموبايل وأجهزة التابلت === */
+        @media (max-width: 768px) {
+            /* في الموبايل، القائمة الجانبية تكون مخفية بالتحويل (translateX) */
+            .sidebar {
+                width: 250px;
+                transform: translateX(100%);
+                box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+                left: unset;
+                right: 0;
+                position: fixed;
+                padding-top: 60px;
+            }
+            /* في الموبايل، الكلاس activeSidebar هو ما يجعلها ظاهرة (تحويل إلى translateX(0)) */
+            .sidebar.activeSidebar {
+                transform: translateX(0);
+            }
+
+            /* نلغي تأثيرCollapsed على الموبايل في CSS */
+            .sidebar.collapsed {
+                width: 250px;
+            }
+
+            .main-content { margin-right: 0; width: 100%; padding: 10px; }
+            .main-content.expanded { margin-right: 0; }
+            .header { padding: 10px 15px; position: sticky; top: 0; z-index: 10; margin-bottom: 10px; }
+            .header h1 { font-size: 1.2rem; }
+            .menu-toggle-btn { order: 3; margin-left: 0; margin-right: 10px; }
+            .user-avatar img { width: 36px; height: 36px; }
+            .vote-entry-container { padding: 15px; }
+            .info-row { flex-direction: column; gap: 10px; }
+            .form-field input { font-size: 0.95rem; }
+            .grid-header { padding: 8px 0; font-size: 0.9rem; }
+            .grid-row .col-seq { flex-grow: 0.5; min-width: 50px; }
+            .grid-row .col-votes { flex-grow: 4; }
+            .grid-row .col-votes input { font-size: 1.1rem; }
+            .col-seq div { padding: 8px; }
+            .action-buttons { justify-content: space-between; }
+            .action-buttons button { padding: 10px 15px; flex-grow: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar" id="sidebar">
+        <div class="logo-box"> <img src="logo.png" alt="شعار النظام"> </div>
+        <h3 id="currentUserName">المستخدم: ---</h3>
+        <h3 id="currentUserSection">القسم: ---</h3>
+        <nav>
+            <a href="#"> <span class="icon">📄</span> <span>تسجيل حضور وكلاء الكيان</span> </a>
+            <a href="#"> <span class="icon">📝</span> <span>تسجيل انصراف وكلاء الكيان</span> </a>
+            <a href="#"> <span class="icon">👥</span> <span>تسجيل حضور مراقبي المرشحين</span> </a>
+            <a href="#" class="active"> <span class="icon">📊</span> <span>عرض النتائج</span> </a>
+            <a href="#" > <span class="icon">📍</span> <span>خريطة النتائج</span> </a>
+        </nav>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <div class="header">
+            <button class="menu-toggle-btn" id="menuToggleBtn">☰</button>
+            <h1>الموقع الانتخابي</h1>
+            <div class="user-profile-menu">
+                <div class="user-avatar" id="userAvatarBtn"> <img src="avatar.jpg" alt="صورة الملف الشخصي"> </div>
+                 <div class="dropdown-menu" id="userDropdown">
+                    <div class="user-details"> <span id="dropdownUserName" class="user-name-tag"></span> <span class="icon">👤</span> </div>
+                    <hr>
+                    <button class="logout-btn" id="logoutBtn"> تسجيل خروج <span class="icon">🔌</span> </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="vote-entry-container">
+            <div class="section-title-box">القسم <span id="displaySectionNumber">1</span></div>
+            <div class="info-row">
+                <div class="form-field" style="flex-basis: 30%;"> <label>اسم الحزب</label> <input type="text" value="حركة الصادقون" readonly> </div>
+                <div class="form-field"> <label>أصوات المرشحين</label> <input type="text" value="-" readonly> </div>
+                <div class="form-field"> <label>أصوات الحزب فقط</label> <input type="text" value="-" readonly> </div>
+                <div class="form-field"> <label>المجموع</label> <input type="text" value="-" readonly> </div>
+                <div class="form-field" style="flex-basis: 15%;"> <label>عدد الصفوف (X1)</label> <input type="number" value="38" readonly> </div>
+            </div>
+
+            <div class="votes-grid">
+                <div class="grid-header"> <div class="col-votes">عدد الأصوات</div> <div class="col-seq">التسلسل</div> </div>
+                <form id="voteForm">
+                    <div class="grid-row"> <div class="col-votes"> <input type="number" data-seq="1" value="" placeholder="*"> </div> <div class="col-seq"> <div data-seq-display="1">1</div> </div> </div>
+                    <div class="grid-row"> <div class="col-votes"> <input type="number" data-seq="2" value="" placeholder="*"> </div> <div class="col-seq"> <div data-seq-display="2">2</div> </div> </div>
+                    <div class="grid-row"> <div class="col-votes"> <input type="number" data-seq="3" value="" placeholder="*"> </div> <div class="col-seq"> <div data-seq-display="3">3</div> </div> </div>
+                    <div class="grid-row"> <div class="col-votes"> <input type="number" data-seq="4" value="" placeholder="*"> </div> <div class="col-seq"> <div data-seq-display="4">4</div> </div> </div>
+                    <div class="grid-row"> <div class="col-votes"> <input type="number" data-seq="5" value="" placeholder="*"> </div> <div class="col-seq"> <div data-seq-display="5">5</div> </div> </div>
+                    <div class="grid-row"> <div class="col-votes"> <input type="number" data-seq="6" value="" placeholder="*"> </div> <div class="col-seq"> <div data-seq-display="6">6</div> </div> </div>
+                    <div class="grid-row"> <div class="col-votes"> <input type="number" data-seq="7" value="" placeholder="*"> </div> <div class="col-seq"> <div data-seq-display="7">7</div> </div> </div>
+                    <div class="grid-row"> <div class="col-votes"> <input type="number" data-seq="8" value="" placeholder="*"> </div> <div class="col-seq"> <div data-seq-display="8">8</div> </div> </div>
+                    <div class="grid-row"> <div class="col-votes"> <input type="number" data-seq="9" value="" placeholder="*"> </div> <div class="col-seq"> <div data-seq-display="9">9</div> </div> </div>
+                    <div class="grid-row"> <div class="col-votes"> <input type="number" data-seq="10" value="" placeholder="*"> </div> <div class="col-seq"> <div data-seq-display="10">10</div> </div> </div>
+                </form>
+            </div>
+
+            <div class="action-buttons"> <button class="reset-btn">إعادة تعبئة</button> <button class="save-btn">حفظ</button> </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const menuToggleBtn = document.getElementById('menuToggleBtn');
+            const displaySectionNumber = document.getElementById('displaySectionNumber');
+
+            // 💡 منطق قائمة الإخفاء/الإظهار الجانبية - استخدام activeSidebar للموبايل 💡
+            menuToggleBtn.addEventListener('click', () => {
+                const isDesktop = window.innerWidth > 768;
+
+                if (isDesktop) {
+                    // على سطح المكتب: نستخدم collapsed لتصغير الشريط وتوسيع المحتوى
+                    sidebar.classList.toggle('collapsed');
+                    mainContent.classList.toggle('expanded');
+                } else {
+                    // على الموبايل: نستخدم activeSidebar لإظهار الشريط أو إخفائه
+                    sidebar.classList.toggle('activeSidebar');
+                }
+            });
+
+            // *** إضافة جديدة: تأكيد حالة العرض الصحيحة عند تغيير حجم الشاشة ***
+            window.addEventListener('resize', () => {
+                const isDesktop = window.innerWidth > 768;
+
+                if (isDesktop) {
+                    // عند الانتقال إلى سطح المكتب، تأكد من أن القائمة مفتوحة والمحتوى طبيعي
+                    sidebar.classList.remove('collapsed');
+                    sidebar.classList.remove('activeSidebar'); // إزالة كلاس الموبايل
+                    mainContent.classList.remove('expanded');
+                } else {
+                    // عند الانتقال إلى الموبايل، نلغي حالة التكبير لسطح المكتب
+                    mainContent.classList.remove('expanded');
+                    sidebar.classList.remove('collapsed'); // نلغي كلاس التصغير لسطح المكتب
+                }
+            });
+
+            // 💡 منطق تسجيل الدخول وعرض بيانات المستخدم 💡
+            const userDataString = localStorage.getItem('currentUser');
+
+            if (!userDataString) {
+                alert('❌ غير مصرح لك بالدخول. سيتم توجيهك إلى صفحة تسجيل الدخول.');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            let user;
+            try {
+                user = JSON.parse(userDataString);
+                const fullName = user.full_name || user.username;
+                const sectionId = user.section_id || 'عام';
+
+                document.getElementById('currentUserName').innerHTML = `المستخدم: <b>${fullName}</b>`;
+                document.getElementById('currentUserSection').innerHTML = `القسم: <b>${sectionId}</b>`;
+                displaySectionNumber.textContent = sectionId;
+                document.getElementById('dropdownUserName').textContent = fullName;
+
+                const userAvatarBtn = document.getElementById('userAvatarBtn');
+                const userDropdown = document.getElementById('userDropdown');
+                const logoutBtn = document.getElementById('logoutBtn');
+
+                userAvatarBtn.addEventListener('click', (e) => {
+                    userDropdown.classList.toggle('active');
+                    e.stopPropagation();
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (userDropdown.classList.contains('active') && !userDropdown.contains(e.target) && !userAvatarBtn.contains(e.target)) {
+                        userDropdown.classList.remove('active');
+                    }
+                });
+
+                logoutBtn.addEventListener('click', () => {
+                    localStorage.removeItem('currentUser');
+                    alert('👋 تم تسجيل الخروج بنجاح.');
+                    window.location.href = 'index.html';
+                });
+
+            } catch (e) {
+                console.error("خطأ في قراءة بيانات المستخدم من Local Storage:", e);
+                localStorage.removeItem('currentUser');
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>

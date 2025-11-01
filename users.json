@@ -1,0 +1,23 @@
+[
+  {
+    "username": "07733510520",
+    "password": "0000",
+    "full_name": "خالد لعيبي الخزعلي",
+    "role": "مدخل بيانات",
+    "section_id": "1"
+  },
+  {
+    "username": "07704445566",
+    "password": "pass456",
+    "full_name": "نور صباح",
+    "role": "مشرف قسم",
+    "section_id": "1"
+  },
+  {
+    "username": "admin_01",
+    "password": "securepwd789",
+    "full_name": "الإدارة العامة",
+    "role": "إدارة عليا",
+    "section_id": null
+  }
+]

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول للنظام</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f6; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .login-card { width: 100%; max-width: 400px; background: #fff; padding: 40px 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); text-align: center; }
+        .logo-container { margin-bottom: 20px; }
+        .logo { width: 100px; height: 100px; display: block; margin: 0 auto; object-fit: contain; }
+        h2 { font-size: 1.8rem; color: #333; margin-bottom: 5px; }
+        .subtitle { font-size: 1rem; color: #777; margin-bottom: 30px; display: block; }
+        .form-group { margin-bottom: 20px; text-align: right; }
+        .input-wrapper { position: relative; display: flex; align-items: center; border: 1px solid #ddd; border-radius: 8px; padding: 0 10px; }
+        .input-wrapper input { flex-grow: 1; padding: 12px 0; border: none; outline: none; font-size: 1rem; text-align: right; background: none; }
+        .input-icon { color: #aaa; margin-right: 10px; }
+        .login-btn { width: 100%; padding: 15px; border: none; border-radius: 8px; background-color: #6c5ce7; color: white; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: background-color 0.2s; }
+        .login-btn:hover { background-color: #5a4bcf; }
+        .forgot-password { float: right; margin-top: -10px; margin-bottom: 25px; }
+        .forgot-password a { color: #6c5ce7; text-decoration: none; font-size: 0.9rem; }
+
+        /* === التجاوب (Responsive) === */
+        @media (max-width: 600px) {
+            .login-card {
+                padding: 20px 15px;
+                margin: 0 15px; /* لإضافة هامش على الجانبين */
+                box-shadow: none; /* إزالة الظل لجعلها تبدو كجزء من الشاشة */
+            }
+            body {
+                background-color: #ffffff; /* تغيير لون الخلفية في الموبايل */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="logo-container">
+            <img class="logo" src="logo.png" alt="شعار النظام">
+        </div>
+        <h2>👋 مرحباً بك</h2>
+        <span class="subtitle">الرجاء تسجيل الدخول للنظام</span>
+
+        <form>
+            <div class="form-group">
+                <label for="username">رقم الهاتف / اسم المستخدم</label>
+                <div class="input-wrapper"> <span class="icon input-icon">📞</span>
+                    <input type="text" id="username" name="username" placeholder="اسم المستخدم" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="password">رمز الدخول</label>
+                <div class="input-wrapper"> <span class="icon input-icon">🔒</span>
+                    <input type="password" id="password" name="password" placeholder="********" required>
+                </div>
+            </div>
+            <div class="forgot-password">
+                <a href="#">هل نسيت كلمة المرور الخاصة بك؟</a>
+            </div>
+            <button type="submit" class="login-btn">تسجيل دخول</button>
+        </form>
+    </div>
+    <script>
+        const USERS_FILE_PATH = 'users.json';
+        const REDIRECT_PAGE = 'votes-entry-full.html';
+
+        async function fetchUsersData() {
+            try {
+                const response = await fetch(USERS_FILE_PATH);
+                if (!response.ok) {
+                    throw new Error('فشل في تحميل بيانات المستخدمين.');
+                }
+                return await response.json();
+            } catch (error) {
+                console.error('خطأ في جلب بيانات المستخدمين:', error);
+                alert('❌ فشل في تحميل قاعدة البيانات. تأكد من وجود ملف users.json في المجلد الرئيسي.');
+                return null;
+            }
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+
+            const usernameInput = document.getElementById('username').value.trim();
+            const passwordInput = document.getElementById('password').value;
+
+            if (!usernameInput || !passwordInput) {
+                alert('الرجاء إدخال اسم المستخدم ورمز الدخول.');
+                return;
+            }
+
+            const users = await fetchUsersData();
+            if (!users) { return; }
+
+            const foundUser = users.find(user =>
+                user.username === usernameInput && user.password === passwordInput
+            );
+
+            if (foundUser) {
+                localStorage.setItem('currentUser', JSON.stringify(foundUser));
+                alert(`✅ تم تسجيل الدخول بنجاح! مرحباً بك يا ${foundUser.full_name}.`);
+                window.location.href = REDIRECT_PAGE;
+
+            } else {
+                alert('❌ خطأ في اسم المستخدم أو رمز الدخول. الرجاء المحاولة مرة أخرى.');
+            }
+        }
+        document.querySelector('form').addEventListener('submit', handleLogin);
+    </script>
+</body>
+</html>
